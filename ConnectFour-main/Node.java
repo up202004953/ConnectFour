@@ -1,60 +1,46 @@
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.List;
 
 class Node {
-
-	private int n = 0;						// nr of times node has been visited
-	private int t = 0;						// value given by the rollouts
-	private Node parent;
-	private Board b;
-	private ArrayList<Node> desc = null;				// list of descendent nodes
-
-	public Node(Board b, Node parent) {
-		this.b = b;
-		this.parent = parent;
-	}
-
-	public void setN(int n) { this.n = n; }
-	public void setT(int t) { this.t = t; }
-	public void setBoard(Board b) { this.b = b; }
-	public void setParent(Node parent) {this.parent = parent; }
-	public void setDesc(ArrayList<Node> desc) { this.desc = desc; }
+    private final Board board;
+    private final Node parent;
+    private int n = 0;						// nr of times node has been visited
+    private int t = 0;						// value given by the rollouts
+    private final PlayerType pt;
+    private final List<Node> succ = new ArrayList<>();
 
 
-	public int getN() { return n; }
-	public int getT() { return t; }
-	public Board getBoard() {return b; }
-	public Node getParent() { return parent; }
-	public ArrayList<Node> getDesc() { return desc; }
+    public Node(Board board, PlayerType pt) {
+        this.board = board;
+        this.parent = null;
+        this.pt = pt;
+    }
 
-	public ArrayList<Node> getSucc(PlayerType pt) {
-		ArrayList<Node> succ = new ArrayList<>();
+    public Node(Board board, Node parent, PlayerType pt) {
+        this.board = board;
+        this.parent = parent;
+        this.pt = pt;
+    }
 
-		int width = b.getWidth();
-		int[] high = b.getHigh();
-		int height = b.getHeight();
-		char[][] matrix = b.getMatrix();
+    public Board getBoard() {return board;}
+    public Node getParent() {return parent;}
+    public PlayerType getPt() {return pt;}
+    public int getN() {return n;}
+    public int getT() {return t;}
+    public void addN() {n++;}
+    public void addT(int t) {this.t += t;}
+    public List<Node> getSucc() {return succ;}
 
-		for (int n = 0; n < width; n++) {
-			if (high[n] < height) {
-				char[][] curMatrix = new char[width][height];
-				int[] curHigh = new int[width];
+    public int terminal() {return board.terminal(pt);}
+    public void generate() {
+        if (!succ.isEmpty()) return;
 
-				for (int i = 0; i < width; i++) {
-					curHigh[i] = high[i];
-					for (int j = 0; j < height; j++) {
-						if (n == i && j == high[i]) {
-							curMatrix[i][j] = pt.getSymbol();
-							curHigh[i]++;
-						}
-						else curMatrix[i][j] = matrix[i][j];
-					}
-				}
-				Board b = new Board(curMatrix, curHigh, width, height);
-				succ.add(new Node(b, this));
-			}
-		}
-		return succ;
+        PlayerType nextPt = PlayerType.change(pt);
+        for (Board b : board.getSucc(nextPt)) succ.add(new Node(b, this, nextPt));
+    }
 
-	}
+    @Override
+    public String toString() {
+        return board.toString();
+    }
 }

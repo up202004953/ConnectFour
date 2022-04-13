@@ -1,84 +1,74 @@
 import java.util.Random;
-import java.util.Arrays;
 import java.util.ArrayList;
-import java.lang.Math;
+import java.util.List;
 
 class MCTS {
+    private static final Random r = new Random();
+    private static final int limit = 50042;
 
-	public static Node bestUCB(ArrayList<Node> desc, PlayerType pt) {		// from a list of nodes, it choses the one with the best UCB (or the first that
-											// hasn't been visited
-		Node solution = desc.get(0);
-		double max = 0;
-		for (int i = 0; i < desc.size(); i++) {
-			Node cur = desc.get(i);
-			double t = cur.getT();
-			double n = cur.getN();
-			int N = cur.getParent().getN();
-//			System.out.println("teste");
-			if (cur.getN() == 0) { return cur; }
-			double ucb = t/n + (2 * Math.sqrt(Math.log(N)/n));
-			System.out.println(ucb);
-			if (ucb > max) {
-				max = ucb;
-				solution = cur;
-			}
-		}
-		return solution;
-	}
+    public static Board run(Board b) {
+        Node root = new Node(b, null, PlayerType.Player);
+        root.generate();
 
-	public static int rollout(Node pick, PlayerType pt) {				// after specified node, it does a rollout
-		Random r = new Random();
-		Node cur = pick;
-		while(true) {
-			ArrayList<Node> desc = cur.getSucc(pt);
-			pt.change();
-			int rand = r.nextInt(desc.size());
-//			System.out.println(rand);
-			cur = desc.get(rand);
-			if (cur.getBoard().isFinal()) {
-				return cur.getBoard().getUtility();
-			}
-		}
-	}
+        for (int i = 0; i < limit; i++) {
+            Node cur = root;
 
-	public static Board runMCTS (Board b, PlayerType pt, int limit) {
-		Node root = new Node(b, null);
-		ArrayList<Node> firstDesc = root.getSucc(pt);
-		root.setDesc(firstDesc);
-		Node cur = root;
-		PlayerType tempPT;
-		for (int i = 0; i < limit; i++) {
-			tempPT = pt;
-//			System.out.println(cur.getN());
-			while(cur.getDesc() != null) {
-				cur = bestUCB(cur.getSucc(tempPT), tempPT);
-//				System.out.println(cur.getN());
-//				System.out.println(cur.getBoard());
-				tempPT.change();
-			}
-			if (cur.getBoard().isFinal()) {
-				if (cur.getBoard().getUtility() == 512) { return cur.getBoard(); }
-			}
-			cur.setDesc(cur.getSucc(tempPT));
-			int v = rollout(cur, tempPT);
-			while(cur.getParent() != null) {
-				cur.setT(v+cur.getT());
-				cur.setN(cur.getN()+1);
-//				System.out.println(cur.getN());
-				cur = cur.getParent();
-				for (int j = 0; j < cur.getDesc().size(); j++) {
-					System.out.print(cur.getDesc().get(j).getN() + " ");
-					System.out.print(cur.getDesc().get(j).getT() + " ");
-				}
-				System.out.println();
-			}
-		}
-		return bestUCB(firstDesc, pt).getBoard();
-	}
+            while(!cur.getSucc().isEmpty()) {
+                cur = cur.getSucc().get(bestUCB(cur.getSucc()));
+                cur.addN();
+            }
 
-/*	public static void doMCTS(Board b, PlayerType pt, int limit) {
-		Board result = runMCTS(b, pt, limit);
-		System.out.println(result);
-	}
-*/
+            int v = rollout(cur);
+            while(cur.getParent() != null) {
+                cur.addT(v);
+                cur.addN();
+
+                cur = cur.getParent();
+            }
+            cur.addT(v);
+            cur.addN();
+        }
+
+        return root.getSucc().get(bestUCB(root.getSucc())).getBoard();
+    }
+
+    public static int bestUCB(List<Node> desc) {		// from a list of nodes, it choses the one with
+        int pos = 0;                                   // the best UCB or the first that hasn't been visited
+
+        if (desc.get(0).getN() == 0) return pos;
+
+        PlayerType pt = desc.get(0).getPt();
+
+        double best = (double) (desc.get(0).getT()) / desc.get(0).getN() +
+                (2 * Math.sqrt(Math.log(desc.get(0).getParent().getN()) / desc.get(0).getN()));
+
+        for (int i = 1; i < desc.size(); i++) {
+            if (desc.get(i).getN() == 0) return i;
+
+            double ucb = (double) (desc.get(i).getT()) / desc.get(i).getN() +
+                    (2 * Math.sqrt(Math.log(desc.get(i).getParent().getN()) / desc.get(i).getN()));
+
+            if ((pt.name().equals(PlayerType.Player.name()) && ucb < best) ||
+                    (pt.name().equals(PlayerType.Computer.name()) && ucb > best)) {
+                best = ucb;
+                pos = i;
+            }
+        }
+
+        return pos;
+    }
+
+    public static int rollout(Node pick) {				// after specified node, it does a rollout
+        Node cur = pick;
+
+        while(true) {
+            int t = cur.terminal();
+            if (t == -512 || t == 0 || t == 512) return t;
+
+            cur.generate();
+            ArrayList<Node> desc = (ArrayList<Node>) cur.getSucc();
+
+            cur = desc.get(r.nextInt(desc.size()));
+        }
+    }
 }
