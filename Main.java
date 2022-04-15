@@ -1,30 +1,25 @@
-package ConnectFour;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
+        Screen.clear();
+        System.out.println("Welcome to Connect Four!");
+
         Scanner stdin = new Scanner(System.in);
 
+        System.out.print("Type the width of your board: ");
         int w = stdin.nextInt();
+        System.out.print("Type the height of your board: ");
         int h = stdin.nextInt();
 
-        stdin.nextLine();
+        Board board = new Board(w,h);
 
-        char[][] m = new char[w][h];
+        System.out.print("Which algorithm do you want? Min-Max (1), Alfa-Beta (2) or MCTS (3)? ");
+        int algorithm = stdin.nextInt();
 
-        for (int i = h-1; i >= 0; i--) {
-            String line = stdin.nextLine();
-            for (int j = 0; j < w; j++) {
-                m[j][i] = line.charAt(j);
-            }
-        }
+        System.out.print("Do you want to start first? (yes or no) ");
+        if (stdin.next().equals("yes")) Game.start(board, PlayerType.Player, stdin, algorithm);
+        else Game.start(board, PlayerType.Computer, stdin, algorithm);
 
-        Board test = new Board(m,w,h);
-
-        System.out.println(test.getUtility());
     }
 }

@@ -1,7 +1,4 @@
-package ConnectFour;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Board {
@@ -53,26 +50,30 @@ public class Board {
     public int getWidth() {return width;}
     public int getHeight() {return height;}
 
+    public Board insert(int col, PlayerType pt) {
+        char[][] curMatrix = new char[width][height];
+        int[] curHigh = new int[width];
+
+        for (int i = 0; i < width; i++) {
+            curHigh[i] = high[i];
+            for (int j = 0; j < height; j++) {
+                if (col == i && j == high[i]) {
+                    curMatrix[i][j] = pt.getSymbol();
+                    curHigh[i]++;
+                }
+                else curMatrix[i][j] = matrix[i][j];
+            }
+        }
+
+        return new Board(curMatrix, curHigh, width, height);
+    }
+
     public List<Board> getSucc(PlayerType pt) {
         ArrayList<Board> succ = new ArrayList<>();
 
         for (int n = 0; n < width; n++) {
             if (high[n] < height) {
-                char[][] curMatrix = new char[width][height];
-                int[] curHigh = new int[width];
-
-                for (int i = 0; i < width; i++) {
-                    curHigh[i] = high[i];
-                    for (int j = 0; j < height; j++) {
-                        if (n == i && j == high[i]) {
-                            curMatrix[i][j] = pt.getSymbol();
-                            curHigh[i]++;
-                        }
-                        else curMatrix[i][j] = matrix[i][j];
-                    }
-                }
-
-                succ.add(new Board(curMatrix, curHigh, width, height));
+                succ.add(insert(n, pt));
             }
         }
 
@@ -93,7 +94,6 @@ public class Board {
         if (computer == 2) return 10;
         if (computer == 1) return 1;
 
-        System.out.println("Deu 999");
         return 0;
     }
 
@@ -110,7 +110,9 @@ public class Board {
                     else if (matrix[j+k][i] == PlayerType.Computer.getSymbol()) computer++;
                 }
                 int v = value(player,computer);
-                if (v == 512 || v == -512) return v;
+                if (v == 512 || v == -512) {
+                    return v;
+                }
                 sum += v;
             }
         }
@@ -176,6 +178,15 @@ public class Board {
         }
 
         return sum;
+    }
+
+    public int terminal(PlayerType pt) {
+        int utility = getUtility();
+        if (utility == 512 || utility == -512) return utility; //Win or Lose
+
+        ArrayList<Board> succ = (ArrayList<Board>) getSucc(pt);
+        if (succ.isEmpty()) return 0; //Draw
+        return 42; //The game can continue
     }
 
     @Override
