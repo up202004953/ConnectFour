@@ -7,7 +7,7 @@ class Node {
     private int n = 0;						// nr of times node has been visited
     private int t = 0;						// value given by the rollouts
     private final PlayerType pt;
-    private final List<Node> succ = new ArrayList<>();
+    private List<Node> succ = new ArrayList<>();
 
 
     public Node(Board board, PlayerType pt) {
@@ -28,7 +28,7 @@ class Node {
     public int getN() {return n;}
     public int getT() {return t;}
     public void addN() {n++;}
-    public void addT(int t) {this.t += t;}
+    public void addT() {t++;}
     public List<Node> getSucc() {return succ;}
 
     public int terminal() {return board.terminal(pt);}
@@ -38,9 +38,7 @@ class Node {
         PlayerType nextPt = PlayerType.change(pt);
         for (Board b : board.getSucc(nextPt)) succ.add(new Node(b, this, nextPt));
     }
-
-    @Override
-    public String toString() {
-        return board.toString();
+    public void delete() {
+        succ = new ArrayList<>();
     }
 }

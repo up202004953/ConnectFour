@@ -15,17 +15,20 @@ class MCTS {
 
             while(!cur.getSucc().isEmpty()) {
                 cur = cur.getSucc().get(bestUCB(cur.getSucc()));
-                cur.addN();
             }
 
             int v = rollout(cur);
+
+            cur.delete();
+
             while(cur.getParent() != null) {
-                cur.addT(v);
+                if (v == 512) cur.addT();
                 cur.addN();
 
                 cur = cur.getParent();
             }
-            cur.addT(v);
+
+            if (v == 512) cur.addT();
             cur.addN();
         }
 
@@ -37,25 +40,24 @@ class MCTS {
 
         if (desc.get(0).getN() == 0) return pos;
 
-        PlayerType pt = desc.get(0).getPt();
-
-        double best = (double) (desc.get(0).getT()) / desc.get(0).getN() +
-                (2 * Math.sqrt(Math.log(desc.get(0).getParent().getN()) / desc.get(0).getN()));
+        double best = ucb(desc.get(0));
 
         for (int i = 1; i < desc.size(); i++) {
             if (desc.get(i).getN() == 0) return i;
 
-            double ucb = (double) (desc.get(i).getT()) / desc.get(i).getN() +
-                    (2 * Math.sqrt(Math.log(desc.get(i).getParent().getN()) / desc.get(i).getN()));
+            double ucb = ucb(desc.get(i));
 
-            if ((pt.name().equals(PlayerType.Player.name()) && ucb < best) ||
-                    (pt.name().equals(PlayerType.Computer.name()) && ucb > best)) {
+            if (ucb > best) {
                 best = ucb;
                 pos = i;
             }
         }
 
         return pos;
+    }
+
+    private static double ucb(Node n) {
+        return (double) (n.getT()) / n.getN() + Math.sqrt(2 * Math.log(n.getParent().getN()) / n.getN());
     }
 
     public static int rollout(Node pick) {				// after specified node, it does a rollout

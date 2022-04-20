@@ -2,8 +2,7 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        Screen.clear();
-        System.out.println("Welcome to Connect Four!");
+        System.out.println("Welcome to \033[1mConnect Four.\033[0m");
 
         Scanner stdin = new Scanner(System.in);
 
