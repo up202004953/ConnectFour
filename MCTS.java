@@ -4,7 +4,7 @@ import java.util.List;
 
 class MCTS {
     private static final Random r = new Random();
-    private static final int limit = 50042;
+    private static final int limit = 10042;
 
     public static Board run(Board b) {
         Node root = new Node(b, null, PlayerType.Player);
