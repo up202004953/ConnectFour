@@ -44,7 +44,7 @@ public class AlfaBeta {
         if (depth == limit) return cur.getUtility();
 
         int t = cur.terminal(PlayerType.Player);
-        if (t == -1 || t == 0 || t == 1) return t;
+        if (t == -512 || t == 0 || t == 512) return t;
 
         ArrayList<Board> succ = (ArrayList<Board>) cur.getSucc(PlayerType.Player);
 
